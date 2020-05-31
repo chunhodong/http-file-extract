@@ -1,16 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const fs = require('fs');
-const AWS = require('aws-sdk');
 const Chance = require('chance');
 var ReadableStream = require('stream').Readable || require('readable-stream');
-
 var inherits = require('util').inherits;
-
 var Dicer = require('dicer');
-
-var inspect = require('util').inspect
 
 function FileStream(opts) {
     if (!(this instanceof FileStream))
@@ -42,7 +36,7 @@ router.post('/test',async(req,res,next)=>{
     console.log('boundary : ',boundary);
     
     const d = new Dicer({boundary});
-
+    
     d.on('part', function(p) {
         console.log('New part! : ');
       

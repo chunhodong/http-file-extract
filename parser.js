@@ -1,4 +1,5 @@
 const ReadableStream = require('stream').Readable || require('readable-stream');
+const Dicer = require('dicer');
 
 function FileStream(opts) {
   if (!(this instanceof FileStream)) return new FileStream(opts);
@@ -8,65 +9,70 @@ function FileStream(opts) {
 }
 inherits(FileStream, ReadableStream);
 
-const _parser = async (headers) => {
-  const header = req.headers['content-type'];
-  if (!header) {
-    throw new Error('non exists content-type');
-  }
-  if (header.indexOf('multipart/form-data') < 0) {
-    throw new Error('non exists multipart/form-data');
-  }
-  const boundary = header.split('=')[1];
-  const dicer = new Dicer({ boundary });
-  dicer.on('part', function (part) {
-    console.log('New part! : ');
 
-    let contype;
-    let filename;
-    let fieldname;
-    part.on('header', function (header) {
-      contype = header['content-type'];
-      const disposition = header['content-disposition'][0].split(';');
-      fieldname = disposition[1].trim();
+function Parser(header){
 
-      if (contype) {
-        filename = disposition[2].trim();
-      }
-      console.log('contype :', contype);
-      console.log('fieldname :', fieldname);
-      console.log('filename :', filename);
-      const fileStream = new FileStream({});
-      //const ws = fs.createWriteStream(filename+'.png');
-
-      if (contype) {
-        part.on('data', function (data) {
-            fileStream.push(data);
-        });
-        part.on('end', function () {
-          console.log('End of part\n');
-          //   ws.end();
-          //   fsc.push(null);
-          //   fsc.pipe(fs.createWriteStream('kim.png'));
-        });
-      }
-      else{
-        part.on('data', function (data) {
-            console.log('data : ', data.toString());
-            //   ws.write(data);
-            //   fsc.push(data);
-        });
-        part.on('end', function () {
-            console.log('End of part\n');
-            //   ws.end();
-            //   fsc.push(null);
-            //   fsc.pipe(fs.createWriteStream('kim.png'));
+    
+    const header = req.headers['content-type'];
+    if (!header) {
+      throw new Error('non exists content-type');
+    }
+    if (header.indexOf('multipart/form-data') < 0) {
+      throw new Error('non exists multipart/form-data');
+    }
+    const boundary = header.split('=')[1];
+    this.dicer = new Dicer({ boundary });
+    dicer.on('part', function (part) {
+      console.log('New part! : ');
+  
+      let contype;
+      let filename;
+      let fieldname;
+      part.on('header', function (header) {
+        contype = header['content-type'];
+        const disposition = header['content-disposition'][0].split(';');
+        fieldname = disposition[1].trim();
+  
+        if (contype) {
+          filename = disposition[2].trim();
+        }
+        
+      
+        if (contype) {
+          const fileStream = new FileStream({});
+          part.on('data', function (data) {
+              fileStream.push(data);
           });
-      }
+          part.on('end', function () {
+              fileStream.push(null);
+  
+          });
+        }
+        else{
+          let buffer;
+          part.on('data', function (data) {
+              buffer += data.toString();
+
+          });
+          part.on('end', function () {
+              console.log('End of part\n');
+            });
+        }
+      });
     });
-  });
-  dicer.on('finish', function () {
-    console.log('End of parts');
-  });
-  req.pipe(d);
-  return res.status(200).send({ status: 'ok', message: 'ok', code: '9010' });
-};
+    dicer.on('finish', function () {
+      console.log('End of parts');
+      //emit
+    });
+
+
+}
+
+Parser.prototype._write = (chunk) =>{
+    this.dicer.write(chunk);
+}
+
+
+
+
+
