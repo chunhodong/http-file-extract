@@ -72,6 +72,8 @@ Parser.prototype._write = (chunk) =>{
     this.dicer.write(chunk);
 }
 
+module.exports = Parser;
+
 
 
 
