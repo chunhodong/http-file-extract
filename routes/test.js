@@ -6,17 +6,10 @@ const AWS = require('aws-sdk');
 const Chance = require('chance');
 var ReadableStream = require('stream').Readable || require('readable-stream');
 
-const multer = require('../node_modules/multer');
-const multerS3 = require('../node_modules/multer-s3');
-const aws_config = require('../config/aws_config');
-AWS.config.update({ "accessKeyId": '', "secretAccessKey": '', "region": aws_config.region });
-const s3 = new AWS.S3();
-const path = new Date().getFullYear() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getDate() + "/";
 var inherits = require('util').inherits;
 
 var Dicer = require('dicer');
 
-//var parseParams = require('./utils').parseParams;
 var inspect = require('util').inspect
 
 function FileStream(opts) {
@@ -27,13 +20,12 @@ function FileStream(opts) {
     this.truncated = false;
 }
 inherits(FileStream, ReadableStream);
-FileStream.prototype._read = function(n) {
 
-};
 
 
 
 router.post('/test',async(req,res,next)=>{
+    
     
     console.log('req.headers : ',req.headers);
     const header = req.headers['content-type'];
@@ -53,34 +45,48 @@ router.post('/test',async(req,res,next)=>{
 
     d.on('part', function(p) {
         console.log('New part! : ');
-        let fileStream;
-        let field;
+      
+        let contype;
+        let filename;
+        let fieldname;
         p.on('header', function(header) {
-          for (var h in header) {
-              console.log('h is : ',h);
-              
-            console.log('Part header: k: ' + inspect(h)
-            + ', v: ' + inspect(header[h]));
-            
-          }
-          const filename = new Chance().string();
-          const fsc = new FileStream({});
-          console.log('fsc : ',fsc);
-          const ws = fs.createWriteStream(filename+'.png');
+            contype = header['content-type'];
+            const disposition = header['content-disposition'][0].split(';');
+            fieldname = disposition[1].trim();
 
+            if(contype){
+                filename = disposition[2].trim();
+            }
+            console.log('contype :',contype);
+            console.log('fieldname :',fieldname);
+            console.log('filename :',filename)
+
+
+            for (var h in header) {
+                //console.log('h is : ', h);
+        
+                //console.log('Part header: k: ' + inspect(h) + ', v: ' + inspect(header[h]));
+            }
+          const fname = new Chance().string();
+          const fsc = new FileStream({});
+          //const ws = fs.createWriteStream(filename+'.png');
+
+          
           p.on('data', function(data) {
-            ws.write(data);
-            fsc.push(data);
+              console.log('data : ',data.toString());
+         //   ws.write(data);
+         //   fsc.push(data);
           });
           p.on('end', function() {
             console.log('End of part\n');
-            ws.end();
-            fsc.push(null);
+         //   ws.end();
+         //   fsc.push(null);
+         //   fsc.pipe(fs.createWriteStream('kim.png'));
           });
         });
       
       });
-      d.on('finish', function() {
+    d.on('finish', function() {
         console.log('End of parts');
       });
       req.pipe(d);
