@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const bodyParser = require('body-parser');
 //const run = require('./bin/start').run;
 
-const index = require('./routes/test');
+const index = require('./routes');
 const app = express();
 //run();
 
