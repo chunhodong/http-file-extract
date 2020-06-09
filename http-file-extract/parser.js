@@ -1,7 +1,7 @@
 const ReadableStream = require('stream').Readable || require('readable-stream');
 const WritableStream = require('stream').Writable || require('readable-stream');
 
-const Dicer = require('dicer');
+const Dicer = require('../node_modules/dicer');
 inherits = require('util').inherits;
 
 function FileStream (opts) {
@@ -11,13 +11,14 @@ function FileStream (opts) {
   this.truncated = false;
 }
 inherits(FileStream, ReadableStream);
-console.log('@@@parser.js');
+
 class Parser extends WritableStream {
-  constructor(extracter,headers){
+  constructor(extracter,headers,req){
     super();
     this._extracter = extracter;
     this._headers = headers;
-
+    this.limits = headers.limit;
+    this.req = req;
      //헤더값 추출
      if (!this._headers['content-type']) {
        throw new Error('non exists content-type');
@@ -27,9 +28,11 @@ class Parser extends WritableStream {
      }
      //파일구분하는 boundary값 추출
      const boundary = this._headers['content-type'].split('=')[1];
-     console.log('boundray : ',boundary);
-     this.dicer = new Dicer({ boundary });
- 
+     var parserCfg = {
+      boundary: boundary,
+      maxHeaderPairs: (this.limits && this.limits.headerPairs)
+    };
+     this.dicer = new Dicer(parserCfg);
      //파일을 part 단위로 추출
      this.dicer
      .on('drain',function(){
@@ -39,9 +42,7 @@ class Parser extends WritableStream {
        let contype;
        let filename;
        let fieldname;
-       part.on('header', function (header) {
-               console.log('part!!!! : ',part);
- 
+       part.on('header', function (header) { 
          contype = header['content-type'];
          const disposition = header['content-disposition'][0].split(';');
          fieldname = disposition[1].trim();
@@ -81,10 +82,15 @@ class Parser extends WritableStream {
      .on('finish', function () {
        console.log('End of parts');
      });
+
   }
 
-  _write(chunk){
+  
+  _write(chunk, encoding, cb){
+    console.log('ok write : ',cb);
     this.dicer.write(chunk);
+    cb();
+
   }
 
     

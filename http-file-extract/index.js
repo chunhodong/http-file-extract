@@ -21,8 +21,10 @@ class FileExtract{
     parser(req){
         //Parser로 스트림전송
         console.log('parse call');
-        const parser = new Parser(this,req.headers);
+        
+        const parser = new Parser(this,req.headers,req);
         req.pipe(parser);
+
     }
 
     setStream(fieldname,stream){
