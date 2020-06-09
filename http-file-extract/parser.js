@@ -4,14 +4,14 @@ const WritableStream = require('stream').Writable || require('readable-stream');
 const Dicer = require('../node_modules/dicer');
 inherits = require('util').inherits;
 
-function FileStream (opts) {
-  if (!(this instanceof FileStream)) return new FileStream(opts);
-  ReadableStream.call(this, opts);
-
-  this.truncated = false;
+class FileStream  extends ReadableStream{
+  constructor(){
+    super();
+  }
+  _read(){
+    
+  }
 }
-inherits(FileStream, ReadableStream);
-
 class Parser extends WritableStream {
   constructor(extracter,headers,req){
     super();
@@ -36,7 +36,6 @@ class Parser extends WritableStream {
      //파일을 part 단위로 추출
      this.dicer
      .on('drain',function(){
-       console.log('drain$$');
      })
      .on('part', function onPart(part) {
        let contype;
@@ -45,37 +44,32 @@ class Parser extends WritableStream {
        part.on('header', function (header) { 
          contype = header['content-type'];
          const disposition = header['content-disposition'][0].split(';');
-         fieldname = disposition[1].trim();
-   
+         fieldname = disposition[1].split('=')[1].replace(/\"/gi, "").trim();
+         
          if (contype) {
            filename = disposition[2].trim();
          }
          
          //multipart에서 바이너리데이터 추출
          if (contype) {
-           //const fileStream = new FileStream({});
+           const fileStream = new FileStream({});
            part.on('data', function (data) {
-             //fileStream.push(data);
+             fileStream.push(data);
            });
            part.on('end', function () {
-             //fileStream.push(null);
-             console.log('fieldname : ',fieldname);
-             //extracter.setStream(fieldname,fileStream);
+             fileStream.push(null);
+             extracter._setStream(fieldname,fileStream);
    
            });
          }
          else{
-           let buffer;
+           let buffer = '';
            part.on('data', function (data) {
- 
                buffer += data.toString();
- 
            });
            part.on('end', function () {
-               console.log('fieldname : ',fieldname);
-               console.log('field value : ',buffer);
-               
-             });
+             extracter._setBuffer(fieldname,buffer);
+            });
          }
        });
      })

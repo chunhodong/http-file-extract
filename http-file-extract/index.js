@@ -7,48 +7,52 @@ const Parser = require('./parser');
  * 2. 파일별처리 불가 ( a.png 는 s3, b.png는 disk)
  * 3. front와 back에서 속성개수와 이름이 안맞을 경우 error
  */
-class MultipartStructure{
 
-
-
-}
 class FileExtract{
     constructor(){
-        this.fileSet = new Map();
+        this.fileMap = new Map();
+        
         
     }
 
     parser(req){
         //Parser로 스트림전송
-        console.log('parse call');
         
         const parser = new Parser(this,req.headers,req);
         req.pipe(parser);
 
+        return this;
+
     }
 
-    setStream(fieldname,stream){
-       // console.log('get stream : ',stream);
-        if(this.fileSet.has(fieldname)){
-            
-        }
-        else{
-            this.fileSet.set('')
+    _setStream(fieldname,stream){
+        console.log('typeof : ',typeof stream);
 
-        }
+        this._setDataMap(fieldname,stream);
     }
     
-    
-    setBuffer(fieldname,buffer){
+    _setBuffer(fieldname,buffer){
+        console.log('typeof : ',typeof buffer);
+        this._setDataMap(fieldname,buffer);
+    }
 
+    _setDataMap(field,value){
+        if(this.fileMap.has(field)){
+            this.fileMap.get(field).push(value);
+            return;
+        }
+        this.fileMap.set(field,[]);
     }
 
 
     writeS3(filename){
 
+        return this;
     }
 
     writeLocal(){
+
+        return this;
 
     }
 

@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const Extractor = require('../http-file-extract');
-const extractor = new Extractor();
 const AWS = require('aws-sdk');
 const aws_config = require('../config/aws_config');
 const multer = require('../node_modules/multer');
 const multerS3 = require('../node_modules/multer-s3');
-const Dicer = require('dicer');
-var inspect = require('util').inspect;
+
+const Extractor = require('../http-file-extract');
+const extractor = new Extractor();
 
 AWS.config.update({"accessKeyId": aws_config.accessKeyId, "secretAccessKey": aws_config.secretAccessKey, "region": aws_config.region});
 const s3 = new AWS.S3();
@@ -38,7 +37,7 @@ router.post('/upload/file',async(req,res,next)=>{
         return res.status(200).send({ status: "fail", message: 'non exists multipart/form-data'});
     }
     //파일파싱
-    extractor.parser(req);
+    extractor.parser(req).writeLocal().writeS3();
     res.status(200).send({ status: "success", message: 'ok'});
 
 
@@ -47,7 +46,6 @@ router.post('/upload/file',async(req,res,next)=>{
 
 
 router.post('/multer',upload.fields([{ name: 'bom', maxCount: 5 }]),async(req,res,next)=>{
-
     res.status(200).send({ status: "success", message: 'ok'});
 
 })
