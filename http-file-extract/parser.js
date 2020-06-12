@@ -53,12 +53,14 @@ class Parser extends WritableStream {
          //multipart에서 바이너리데이터 추출
          if (contype) {
            const fileStream = new FileStream({});
+           extracter._setStream(fieldname,fileStream);
+
            part.on('data', function (data) {
+
              fileStream.push(data);
            });
            part.on('end', function () {
              fileStream.push(null);
-             extracter._setStream(fieldname,fileStream);
    
            });
          }
@@ -81,7 +83,6 @@ class Parser extends WritableStream {
 
   
   _write(chunk, encoding, cb){
-    console.log('ok write : ',cb);
     this.dicer.write(chunk);
     cb();
 

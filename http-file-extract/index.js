@@ -1,5 +1,5 @@
 const Parser = require('./parser');
-
+const fs = require('fs');
 /**
  * @description multipart file parsing project
  * 기존에 업로드에 사용하는 multer library의 구조적제약 개선
@@ -17,22 +17,17 @@ class FileExtract{
 
     parser(req){
         //Parser로 스트림전송
-        
         const parser = new Parser(this,req.headers,req);
         req.pipe(parser);
-
         return this;
 
     }
 
     _setStream(fieldname,stream){
-        console.log('typeof : ',typeof stream);
-
         this._setDataMap(fieldname,stream);
     }
     
     _setBuffer(fieldname,buffer){
-        console.log('typeof : ',typeof buffer);
         this._setDataMap(fieldname,buffer);
     }
 
@@ -41,7 +36,7 @@ class FileExtract{
             this.fileMap.get(field).push(value);
             return;
         }
-        this.fileMap.set(field,[]);
+        this.fileMap.set(field,[].push(value));
     }
 
 
@@ -50,8 +45,16 @@ class FileExtract{
         return this;
     }
 
-    writeLocal(){
-
+    writeLocal(body,cb){
+        
+        
+        if(!this.fileMap.has(body.name)){
+            return cb(new Error('non exsists file'));
+        }
+        
+        const wstream = fs.createWriteStream(this.fileMap.get(body.path));
+        wstream.on('finish', function(){
+          });
         return this;
 
     }

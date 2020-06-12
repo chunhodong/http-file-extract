@@ -37,7 +37,14 @@ router.post('/upload/file',async(req,res,next)=>{
         return res.status(200).send({ status: "fail", message: 'non exists multipart/form-data'});
     }
     //파일파싱
-    extractor.parser(req).writeLocal().writeS3();
+    extractor
+    .parser(req)
+    .writeLocal({name:'test',path:'/test'},(err,body)=>{
+        if(err){
+            console.log('error : ',err);
+        }
+    });
+    
     res.status(200).send({ status: "success", message: 'ok'});
 
 
