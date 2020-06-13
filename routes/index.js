@@ -39,11 +39,14 @@ router.post('/upload/file',async(req,res,next)=>{
     //파일파싱
     extractor
     .parser(req)
-    .writeLocal({name:'test',path:'/test'},(err,body)=>{
-        if(err){
-            console.log('error : ',err);
+    .writeLocal({name:'test',path:'./test.png'},(err,body)=>{
+        if(err,body){
         }
-    });
+    })
+    .writeS3({},(err,body)=>{
+
+    })
+    ;
     
     res.status(200).send({ status: "success", message: 'ok'});
 
